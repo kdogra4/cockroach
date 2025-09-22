@@ -42,11 +42,25 @@ jobs:
           bazel-diff generate-hash --bazel-path $(which bazel) --output-file bazel-head.hash --repo-commit $HEAD
 
           # Get impacted targets (space-separated)
-          targets=$(bazel-diff get-impacted-targets --from bazel-base.hash --to bazel-head.hash)
+          all_targets=$(bazel-diff get-impacted-targets --from bazel-base.hash --to bazel-head.hash)
+
+          # Filter for go_binary targets only
+          filtered_targets=""
+          for target in $all_targets; do
+            # Check if target is a go_binary using bazel query
+            if bazel query "kind(go_binary, $target)" 2>/dev/null | grep -q "$target"; then
+              if [ -z "$filtered_targets" ]; then
+                filtered_targets="$target"
+              else
+                filtered_targets="$filtered_targets $target"
+              fi
+            fi
+          done
 
           # Join into comma-separated list
-          targets_csv=$(echo "$targets" | tr ' ' ',' | tr -s ',')
-          echo "Impacted targets: $targets_csv"
+          targets_csv=$(echo "$filtered_targets" | tr ' ' ',' | tr -s ',')
+          echo "All impacted targets: $all_targets"
+          echo "Filtered go_binary targets: $targets_csv"
 
           echo "targets=$targets_csv" >> $GITHUB_OUTPUT
 
