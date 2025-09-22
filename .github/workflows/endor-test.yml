@@ -1,0 +1,61 @@
+name: Bazel Targets Scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  detect-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bazel
+        uses: bazelbuild/setup-bazel@v6
+
+      - name: Install bazel-diff
+        run: |
+          curl -sSL https://github.com/Tinder/bazel-diff/releases/download/v4.8.0/bazel-diff_4.8.0_Linux_x86_64.tar.gz \
+            | tar -xz -C /usr/local/bin
+          chmod +x /usr/local/bin/bazel-diff
+
+      - name: Compute changed targets with bazel-diff
+        id: set-targets
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.sha }}
+          else
+            BASE=${{ github.event.before }}
+            HEAD=${{ github.sha }}
+          fi
+
+          echo "BASE: $BASE"
+          echo "HEAD: $HEAD"
+
+          # Generate bazel-diff analysis files
+          bazel-diff generate-hash --bazel-path $(which bazel) --output-file bazel-base.hash --repo-commit $BASE
+          bazel-diff generate-hash --bazel-path $(which bazel) --output-file bazel-head.hash --repo-commit $HEAD
+
+          # Get impacted targets (space-separated)
+          targets=$(bazel-diff get-impacted-targets --from bazel-base.hash --to bazel-head.hash)
+
+          # Join into comma-separated list
+          targets_csv=$(echo "$targets" | tr ' ' ',' | tr -s ',')
+          echo "Impacted targets: $targets_csv"
+
+          echo "targets=$targets_csv" >> $GITHUB_OUTPUT
+
+      - name: Endor Scan Targets
+        if: steps.set-targets.outputs.targets != ''
+        uses: endorlabs/github-action@main
+        with: 
+          namespace: 'kriti-learn'
+          scan_dependencies: true
+          pr: false
+          scan_summary_output_type: 'table'
+          additional_args: "--bazel-include-targets=${{ steps.set-targets.outputs.targets }}"
