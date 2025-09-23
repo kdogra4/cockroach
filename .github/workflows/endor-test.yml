@@ -52,21 +52,24 @@ jobs:
         run: |
           cd pr
           impacted=$(cat ../impacted-targets)
-          go_binaries_array=()
 
+          go_binaries=""
           for target in $impacted; do
             if bazel query "kind('go_binary', $target)" --output=label_kind | grep -q 'go_binary'; then
-              go_binaries_array+=("\"$target\"")
+              # Append to list with comma
+              if [ -z "$go_binaries" ]; then
+                go_binaries="$target"
+              else
+                go_binaries="$go_binaries,$target"
+              fi
             fi
           done
 
-          go_binaries_json="[${go_binaries_array[*]}]"
-          go_binaries_json=$(echo "$go_binaries_json" | jq .)  # pretty print
+          echo "Impacted Go Binary Targets:"
+          echo "$go_binaries"
 
-          echo "Impacted Go Binary Targets (JSON):"
-          echo "$go_binaries_json"
-
-          echo "go_binaries=$go_binaries_json" >> $GITHUB_OUTPUT
+          # Set output for matrix
+          echo "go_binaries=$go_binaries" >> $GITHUB_OUTPUT
 
   scan:
     needs: detect
