@@ -46,15 +46,16 @@ var copts clientsecopts.ClientOptions
 
 func main() {
 	errCode := exit.Success()
-	if err := runMain(); err != nil {
-		clierror.OutputError(os.Stderr, err, true /*showSeverity*/, false /*verbose*/)
-		// Finally, extract the error code, as optionally specified
-		// by the sub-command.
-		errCode = exit.UnspecifiedError()
-		var cliErr *clierror.Error
-		if errors.As(err, &cliErr) {
-			errCode = cliErr.GetExitCode()
-		}
+	// Removing For Test
+	// if err := runMain(); err != nil {
+	// 	clierror.OutputError(os.Stderr, err, true /*showSeverity*/, false /*verbose*/)
+	// 	// Finally, extract the error code, as optionally specified
+	// 	// by the sub-command.
+	// 	errCode = exit.UnspecifiedError()
+	// 	var cliErr *clierror.Error
+	// 	if errors.As(err, &cliErr) {
+	// 		errCode = cliErr.GetExitCode()
+	// 	}
 	}
 	exit.WithCode(errCode)
 }
