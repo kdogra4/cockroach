@@ -11,9 +11,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
         with:
@@ -25,54 +23,17 @@ jobs:
         run: |
           curl -Lo bazel-diff.jar https://github.com/Tinder/bazel-diff/releases/latest/download/bazel-diff_deploy.jar
           java -jar bazel-diff.jar -h
-
-      - name: Compute changed targets with bazel-diff
-        id: set-targets
+      
+      - name: Bazel-diff Generate Hashes
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE=${{ github.event.pull_request.base.sha }}
-            HEAD=${{ github.sha }}
-          else
-            BASE=${{ github.event.before }}
-            HEAD=${{ github.sha }}
-          fi
+          java -jar bazel-diff.jar  generate-hashes --workspacePath $GITHUB_WORKSPACE --bazelPath $(which bazel) ending-hash.json
 
-          echo "BASE: $BASE"
-          echo "HEAD: $HEAD"
-
-          # Generate bazel-diff analysis files
-          bazel-diff generate-hash --bazel-path $(which bazel) --output-file bazel-base.hash --repo-commit $BASE
-          bazel-diff generate-hash --bazel-path $(which bazel) --output-file bazel-head.hash --repo-commit $HEAD
-
-          # Get impacted targets (space-separated)
-          all_targets=$(bazel-diff get-impacted-targets --from bazel-base.hash --to bazel-head.hash)
-
-          # Filter for go_binary targets only
-          filtered_targets=""
-          for target in $all_targets; do
-            # Check if target is a go_binary using bazel query
-            if bazel query "kind(go_binary, $target)" 2>/dev/null | grep -q "$target"; then
-              if [ -z "$filtered_targets" ]; then
-                filtered_targets="$target"
-              else
-                filtered_targets="$filtered_targets $target"
-              fi
-            fi
-          done
-
-          # Join into comma-separated list
-          targets_csv=$(echo "$filtered_targets" | tr ' ' ',' | tr -s ',')
-          echo "All impacted targets: $all_targets"
-          echo "Filtered go_binary targets: $targets_csv"
-
-          echo "targets=$targets_csv" >> $GITHUB_OUTPUT
-
-      - name: Endor Scan Targets
-        if: steps.set-targets.outputs.targets != ''
-        uses: endorlabs/github-action@main
-        with: 
-          namespace: 'kriti-learn'
-          scan_dependencies: true
-          pr: false
-          scan_summary_output_type: 'table'
-          additional_args: "--bazel-include-targets=${{ steps.set-targets.outputs.targets }}"
+      # - name: Endor Scan Targets
+      #   if: steps.set-targets.outputs.targets != ''
+      #   uses: endorlabs/github-action@main
+      #   with: 
+      #     namespace: 'kriti-learn'
+      #     scan_dependencies: true
+      #     pr: false
+      #     scan_summary_output_type: 'table'
+      #     additional_args: "--bazel-include-targets=${{ steps.set-targets.outputs.targets }}"
