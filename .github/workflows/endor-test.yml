@@ -80,6 +80,9 @@ jobs:
       matrix:
         target: ${{ fromJson(needs.detect.outputs.go_binaries)}}
     steps:
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+        
       - name: Endor Scan Targets
         uses: endorlabs/github-action@main
         with: 
@@ -87,5 +90,4 @@ jobs:
           scan_dependencies: true
           pr: false
           scan_summary_output_type: 'table'
-          scan_path: pr
           additional_args: "--use-bazel --bazel-include-targets=${{ matrix.target }}"
