@@ -54,19 +54,19 @@ jobs:
           impacted=$(cat ../impacted-targets)
 
           go_binaries="["
-              first=true
-              for target in $impacted; do
-                if bazel query "kind('go_binary', $target)" --output=label_kind | grep -q 'go_binary'; then
-                  trimmed=$(echo "$target" | xargs)
-                  if [ "$first" = true ]; then
-                    go_binaries+="\"$trimmed\""
-                    first=false
-                  else
-                    go_binaries+=",\"$trimmed\""
-                  fi
-                fi
-              done
-              go_binaries+="]"
+          first=true
+          for target in $impacted; do
+            if bazel query "kind('go_binary', $target)" --output=label_kind | grep -q 'go_binary'; then
+              trimmed=$(echo "$target" | xargs)
+              if [ "$first" = true ]; then
+                go_binaries+="\"$trimmed\""
+                first=false
+              else
+                go_binaries+=",\"$trimmed\""
+              fi
+            fi
+          done
+          go_binaries+="]"
 
           echo "Impacted Go Binary Targets:"
           echo "$go_binaries"
@@ -75,6 +75,9 @@ jobs:
 
   scan:
     needs: detect
+    permissions:
+      id-token: write # Write permission is required to request a json web token (JWT) to perform keyless authentication
+      contents: read 
     runs-on: ubuntu-latest
     strategy:
       matrix:
