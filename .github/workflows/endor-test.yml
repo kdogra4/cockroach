@@ -53,22 +53,24 @@ jobs:
           cd pr
           impacted=$(cat ../impacted-targets)
 
-          go_binaries=""
-          for target in $impacted; do
-            if bazel query "kind('go_binary', $target)" --output=label_kind | grep -q 'go_binary'; then
-              # Append to list with comma
-              if [ -z "$go_binaries" ]; then
-                go_binaries="$target"
-              else
-                go_binaries="$go_binaries,$target"
-              fi
-            fi
-          done
+          go_binaries="["
+              first=true
+              for target in $impacted; do
+                if bazel query "kind('go_binary', $target)" --output=label_kind | grep -q 'go_binary'; then
+                  trimmed=$(echo "$target" | xargs)
+                  if [ "$first" = true ]; then
+                    go_binaries+="\"$trimmed\""
+                    first=false
+                  else
+                    go_binaries+=",\"$trimmed\""
+                  fi
+                fi
+              done
+              go_binaries+="]"
 
           echo "Impacted Go Binary Targets:"
           echo "$go_binaries"
 
-          # Set output for matrix
           echo "go_binaries=$go_binaries" >> $GITHUB_OUTPUT
 
   scan:
