@@ -43,7 +43,18 @@ jobs:
       - name: Get Impacted Targets
         run: |
           java -jar bazel-diff.jar get-impacted-targets -sh starting-hashes.json -fh final-hashes.json -o impacted-tagets
-          cat impacted-tagets 
+          cat impacted-targets
+          
+      - name: Filter for go_binary Targets
+        id: go-binaries
+        run:
+          impacted=$(cat impacted-targets)
+          echo "$impacted" | xargs bazel query 'kind("go_binary", set(^$))' > go-binary.txt
+          cat go-binary.txt
+          go_binaries=$(sed '/^$/d; s/^/"/; s/$/"/' go-binary.txt | paste -sd, -)
+          go_binaries="[$go_binaries]"
+          
+          
   
       # - name: Endor Scan Targets
       #   if: steps.set-targets.outputs.targets != ''
