@@ -26,8 +26,20 @@ jobs:
       
       - name: Bazel-diff Generate Hashes
         run: |
-          java -jar bazel-diff.jar  generate-hashes --workspacePath $GITHUB_WORKSPACE --bazelPath $(which bazel) ending-hash.json
+          java -jar bazel-diff.jar  generate-hashes --workspacePath $GITHUB_WORKSPACE --bazelPath $(which bazel) final-hashes.json
 
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Bazel-diff Generate Hashes
+        run: |
+          java -jar bazel-diff.jar  generate-hashes --workspacePath $GITHUB_WORKSPACE --bazelPath $(which bazel) starting-hashes.json
+
+      - name: Get Impacted Targets
+        run: |
+          java -jar bazel-diff.jar get-impacted-targets -sh starting-hashes.json -fh final-hashes.json 
       # - name: Endor Scan Targets
       #   if: steps.set-targets.outputs.targets != ''
       #   uses: endorlabs/github-action@main
