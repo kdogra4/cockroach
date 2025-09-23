@@ -56,7 +56,6 @@ func main() {
 	// 	if errors.As(err, &cliErr) {
 	// 		errCode = cliErr.GetExitCode()
 	// 	}
-	
 	}
 	exit.WithCode(errCode)
 }
