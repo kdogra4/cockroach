@@ -55,13 +55,11 @@ jobs:
           go_binaries_array=()
 
           for target in $impacted; do
-            output_kind=$(bazel query 'kind(".*", $target)' --output=label_kind)
-            if $output_kind | grep -q 'go_binary'; then
+            if bazel query "kind('go_binary', $target)" --output=label_kind | grep -q 'go_binary'; then
               go_binaries_array+=("\"$target\"")
             fi
           done
 
-          # Convert array to human-readable JSON
           go_binaries_json="[${go_binaries_array[*]}]"
           go_binaries_json=$(echo "$go_binaries_json" | jq .)  # pretty print
 
