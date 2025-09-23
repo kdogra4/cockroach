@@ -50,11 +50,13 @@ jobs:
       - name: Filter for go_binary Targets
         id: go-binaries
         run: |
-          impacted=$(cat impacted-targets)
-          echo "$impacted" | xargs bazel query 'kind("go_binary", set(^$))' > go-binary.txt
+          cd pr
+          impacted=$(cat ../impacted-targets)
+          echo "$impacted" | xargs bazel query 'kind("go_binary", set(^$))' > ../go-binary.txt
           echo "Impacted Binary Targets"
-          cat go-binary.txt
-          go_binaries=$(sed '/^$/d; s/^/"/; s/$/"/' go-binary.txt | paste -sd, -)
+          cat ../go-binary.txt
+          # Convert to JSON for matrix
+          go_binaries=$(sed '/^$/d; s/^/"/; s/$/"/' ../go-binary.txt | paste -sd, -)
           go_binaries="[$go_binaries]"
           echo "go_binaries=$go_binaries" >> $GITHUB_OUTPUT
 
@@ -72,4 +74,5 @@ jobs:
           scan_dependencies: true
           pr: false
           scan_summary_output_type: 'table'
+          path: pr
           additional_args: "--use-bazel --bazel-include-targets=${{ matrix.target }}"
