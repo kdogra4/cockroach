@@ -52,13 +52,23 @@ jobs:
         run: |
           cd pr
           impacted=$(cat ../impacted-targets)
-          echo "$impacted" | xargs bazel query 'kind("go_binary", set(^$))' > ../go-binary.txt
-          echo "Impacted Binary Targets"
-          cat ../go-binary.txt
-          # Convert to JSON for matrix
-          go_binaries=$(sed '/^$/d; s/^/"/; s/$/"/' ../go-binary.txt | paste -sd, -)
-          go_binaries="[$go_binaries]"
-          echo "go_binaries=$go_binaries" >> $GITHUB_OUTPUT
+          go_binaries_array=()
+
+          for target in $impacted; do
+            output_kind=$(bazel query 'kind(".*", $target)' --output=label_kind)
+            if $output_kind | grep -q 'go_binary'; then
+              go_binaries_array+=("\"$target\"")
+            fi
+          done
+
+          # Convert array to human-readable JSON
+          go_binaries_json="[${go_binaries_array[*]}]"
+          go_binaries_json=$(echo "$go_binaries_json" | jq .)  # pretty print
+
+          echo "Impacted Go Binary Targets (JSON):"
+          echo "$go_binaries_json"
+
+          echo "go_binaries=$go_binaries_json" >> $GITHUB_OUTPUT
 
   scan:
     needs: detect
