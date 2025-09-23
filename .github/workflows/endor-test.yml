@@ -42,8 +42,8 @@ jobs:
 
       - name: Get Impacted Targets
         run: |
-          impacted-targets=$(java -jar bazel-diff.jar get-impacted-targets -sh starting-hashes.json -fh final-hashes.json)
-          echo "impacted-targets=$impacted-targets" >> $GITHUB_OUTPUT
+          java -jar bazel-diff.jar get-impacted-targets -sh starting-hashes.json -fh final-hashes.json -o impacted-tagets
+          cat impacted-tagets 
   
       # - name: Endor Scan Targets
       #   if: steps.set-targets.outputs.targets != ''
