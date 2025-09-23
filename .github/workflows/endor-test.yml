@@ -83,9 +83,9 @@ jobs:
       - name: Endor Scan Targets
         uses: endorlabs/github-action@main
         with: 
-          namespace: 'kriti-learn'
+          namespace: 'kriti-learn.team1'
           scan_dependencies: true
           pr: false
           scan_summary_output_type: 'table'
-          path: pr
+          scan_path: pr
           additional_args: "--use-bazel --bazel-include-targets=${{ matrix.target }}"
