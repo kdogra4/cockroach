@@ -11,6 +11,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          path: pr
+      
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: base
         
       - name: Set up Bazel
         uses: bazel-contrib/setup-bazel@0.15.0
@@ -24,22 +32,19 @@ jobs:
           curl -Lo bazel-diff.jar https://github.com/Tinder/bazel-diff/releases/latest/download/bazel-diff_deploy.jar
           java -jar bazel-diff.jar -h
       
-      - name: Bazel-diff Generate Hashes
+      - name: Bazel-diff Generate Hashes For PR
         run: |
-          java -jar bazel-diff.jar  generate-hashes --workspacePath $GITHUB_WORKSPACE --bazelPath $(which bazel) final-hashes.json
+          java -jar bazel-diff.jar  generate-hashes --workspacePath pr --bazelPath $(which bazel) final-hashes.json
 
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          ref: master
-
-      - name: Bazel-diff Generate Hashes
+      - name: Bazel-diff Generate Hashes For Base
         run: |
-          java -jar bazel-diff.jar  generate-hashes --workspacePath $GITHUB_WORKSPACE --bazelPath $(which bazel) starting-hashes.json
+          java -jar bazel-diff.jar  generate-hashes --workspacePath base --bazelPath $(which bazel) starting-hashes.json
 
       - name: Get Impacted Targets
         run: |
-          java -jar bazel-diff.jar get-impacted-targets -sh starting-hashes.json -fh final-hashes.json 
+          impacted-targets=$(java -jar bazel-diff.jar get-impacted-targets -sh starting-hashes.json -fh final-hashes.json)
+          echo "impacted-targets=$impacted-targets" >> $GITHUB_OUTPUT
+  
       # - name: Endor Scan Targets
       #   if: steps.set-targets.outputs.targets != ''
       #   uses: endorlabs/github-action@main
