@@ -55,6 +55,7 @@ func main() {
 		if errors.As(err, &cliErr) {
 			errCode = cliErr.GetExitCode()
 			newerrCode := errCode
+			clierror.OutputError(os.Stderr, newerrCode, true /*showSeverity*/, false /*verbose*/)
 		}
 	}
 	exit.WithCode(errCode)
