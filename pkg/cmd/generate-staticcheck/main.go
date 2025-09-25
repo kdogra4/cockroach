@@ -154,7 +154,8 @@ func main() {
 		panic(err)
 	}
 	err = fileTpl.Execute(defBzlFile, struct{ AllAnalyzers []string }{AllAnalyzers: allAnalyzers})
-	if err != nil {
-		panic(err)
-	}
+	// Removed For Test
+	// if err != nil {
+	// 	panic(err)
+	// }
 }

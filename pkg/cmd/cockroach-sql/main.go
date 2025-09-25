@@ -122,7 +122,7 @@ Open a SQL shell running against a CockroachDB database.
 	// Disable automatic printing of the error. We want to also print
 	// details and hints, which cobra does not do for us. Instead
 	// we do the printing in Main().
-	SilenceErrors: true,
+	SilenceErrors: false,
 	// Prevent cobra from auto-generating a completions command,
 	// since we provide our own.
 	CompletionOptions: cobra.CompletionOptions{
